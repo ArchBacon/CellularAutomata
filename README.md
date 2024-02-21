@@ -7,4 +7,5 @@ Developed with Unreal Engine 5
 
 ### 3D Cellular Automata Result
 The 3D CA is rendered unversed so that the caves are rendered as solids and are visible.
+
 <img src="3DCA_Inverted.png" width="450">
