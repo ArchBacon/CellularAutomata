@@ -2,7 +2,6 @@
 
 #include "Grid.h"
 #include "Components/InstancedStaticMeshComponent.h"
-#include "Engine/Engine.h"
 
 AGrid::AGrid()
 {
@@ -32,25 +31,7 @@ void AGrid::BeginPlay()
 
 void AGrid::StepIteration()
 {
-	TArray<int> newMap = Map;
-	for (int y = 0; y < MapSize.Y; y++)
-	{
-		for (int x = 0; x < MapSize.X; x++)
-		{
-			const int Index = y * MapSize.X + x;
-			const int Count = CountCellWalls(FVector2D(x, y));
-			if (Map[Index] == 1)
-			{
-				newMap[Index] = !(Count < DeathLimit);
-			}
-			else
-			{
-				newMap[Index] = Count > BirthLimit;
-			}
-		}
-	}
-
-	Map = newMap;
+	Step();
 	RenderInstancedCells();
 }
 
@@ -58,8 +39,10 @@ void AGrid::Finalize()
 {
 	for (int i = 0; i < 15; i++)
 	{
-		StepIteration();
+		Step();
 	}
+	
+	RenderInstancedCells();
 }
 
 void AGrid::RenderInstancedCells()
@@ -81,7 +64,31 @@ void AGrid::RenderInstancedCells()
 	}
 }
 
-int AGrid::CountCellWalls(FVector2D Coord)
+void AGrid::RenderDefault()
+{
+	RenderInstancedCells();
+}
+
+void AGrid::RenderInverted()
+{
+	InstancedStaticMeshComponent->ClearInstances();
+	for (int y = 0; y < MapSize.Y; y++)
+	{
+		for (int x = 0; x < MapSize.X; x++)
+		{
+			const int Index = y * MapSize.X + x;
+			if (Map[Index] == 1)
+			{
+				continue;
+			}
+		
+			FTransform Transform(FVector(x * 100, y * 100, 0));
+			InstancedStaticMeshComponent->AddInstance(Transform);
+		}
+	}
+}
+
+int AGrid::CountCellWalls(const FVector2D Coordinate)
 {
 	int WallCount = 0;
 	TArray Neighbours = {
@@ -97,16 +104,15 @@ int AGrid::CountCellWalls(FVector2D Coord)
 
 	for (auto Neighbour : Neighbours)
 	{
-		const auto Cell = Coord + Neighbour;
+		const auto Cell = Coordinate + Neighbour;
 		if (!IsValidCoordinate(Cell))
 		{
 			WallCount += 1;
 		}
 		else
 		{
-			int Index = Cell.Y * MapSize.X + Cell.X;
-			int Value = Map[Index];
-			if (Value == 1)
+			const int Index = Cell.Y * MapSize.X + Cell.X;
+			if (Map[Index] == 1)
 			{
 				WallCount += 1;
 			}
@@ -116,9 +122,31 @@ int AGrid::CountCellWalls(FVector2D Coord)
 	return WallCount;
 }
 
-bool AGrid::IsValidCoordinate(const FVector2D Coord) const
+bool AGrid::IsValidCoordinate(const FVector2D Coordinate) const
 {
-	return
-		Coord.X >= 0 && Coord.X < MapSize.X
-	 && Coord.Y >= 0 && Coord.Y < MapSize.Y;
+	return Coordinate.X >= 0 && Coordinate.X < MapSize.X
+		&& Coordinate.Y >= 0 && Coordinate.Y < MapSize.Y;
+}
+
+void AGrid::Step()
+{
+	TArray<int> NewMap = Map;
+	for (int y = 0; y < MapSize.Y; y++)
+	{
+		for (int x = 0; x < MapSize.X; x++)
+		{
+			const int Index = y * MapSize.X + x;
+			const int Count = CountCellWalls(FVector2D(x, y));
+			if (Map[Index] == 1)
+			{
+				NewMap[Index] = !(Count < DeathLimit);
+			}
+			else
+			{
+				NewMap[Index] = Count > BirthLimit;
+			}
+		}
+	}
+
+	Map = NewMap;
 }

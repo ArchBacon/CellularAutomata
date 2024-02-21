@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Grid.generated.h"
+#include "Grid3D.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)
-class CELLULARAUTOMATA_API AGrid : public AActor
+class CELLULARAUTOMATA_API AGrid3D : public AActor
 {
 	GENERATED_BODY()
 
@@ -18,24 +18,27 @@ class CELLULARAUTOMATA_API AGrid : public AActor
 	TArray<int> Map;
 
 	UPROPERTY(EditAnywhere)
-	FVector2D MapSize = {64, 64};
+	FVector MapSize = {64, 64, 64};
 
 	UPROPERTY(EditAnywhere)
 	int Seed = 1337;
 
 	UPROPERTY(EditAnywhere)
-	int DeathLimit = 3;
+	int DeathLimit = 10;
 	
 	UPROPERTY(EditAnywhere)
-	int BirthLimit = 4;
+	int BirthLimit = 13;
 
 	UPROPERTY(EditAnywhere)
 	float AliveChance = 0.45f;
+
+	UPROPERTY(EditAnywhere)
+	int Slices = 1;
 	
 	FRandomStream Random;
 	
 public:	
-	AGrid();
+	AGrid3D();
 
 protected:
 	virtual void BeginPlay() override;
@@ -45,29 +48,32 @@ public:
 	const TArray<int>& GetMap() const { return Map; }
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	const FVector2D& GetMapSize() const { return MapSize; }
+	const FVector& GetMapSize() const { return MapSize; }
 
-	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid 3D")
 	void StepIteration();
 
-	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid 3D")
 	void Finalize();
 
-	UFUNCTION(BlueprintCallable)
-	void RenderInstancedCells();
+	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid 3D")
+	void RenderSlices();
 
-	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid 3D")
 	void RenderDefault();
 
-	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category="Grid 3D")
 	void RenderInverted();
+	
+	UFUNCTION(BlueprintCallable)
+	void RenderInstancedCells();
 	
 protected:
 	UFUNCTION()
-	int CountCellWalls(FVector2D Coordinate);
+	int CountCellWalls(FVector Coordinate);
 
 	UFUNCTION()
-	bool IsValidCoordinate(FVector2D Coordinate) const;
+	bool IsValidCoordinate(const FVector& Coordinate) const;
 
 	UFUNCTION()
 	void Step();
